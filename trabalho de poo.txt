@@ -1,3 +1,5 @@
+# luiz fernando, ricardo, fabricio e joão gabriel
+#turma info 2v
 import customtkinter as ctk
 from tkinter import messagebox
 import os
