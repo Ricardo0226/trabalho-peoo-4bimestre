@@ -1,0 +1,253 @@
+import customtkinter as ctk
+from tkinter import messagebox
+import os
+import json
+
+# Configuração inicial
+ctk.set_appearance_mode('white')
+ctk.set_default_color_theme('blue')
+
+# Simulação de banco de dados
+usuarios = {}
+dados_usuarios = {}  # Armazena dados de usuários
+ARQUIVO_DADOS = "dados_usuarios.txt"
+
+# Garantir que o arquivo existe ou criá-lo
+def garantir_arquivo_dados():
+    if not os.path.exists(ARQUIVO_DADOS):  # Se o arquivo não existir
+        with open(ARQUIVO_DADOS, 'w') as arquivo:
+            json.dump({}, arquivo)  # Cria o arquivo com um dicionário vazio
+    else:
+        # Se o arquivo existir mas estiver vazio, também inicializa com um dicionário vazio
+        with open(ARQUIVO_DADOS, 'r+') as arquivo:
+            if arquivo.read().strip() == "":  # Verifica se o arquivo está vazio
+                arquivo.seek(0)  # Volta para o início do arquivo
+                json.dump({}, arquivo)  # Escreve um dicionário vazio
+
+# Carregar dados do arquivo
+def carregar_dados():
+    garantir_arquivo_dados()  # Garantir que o arquivo foi criado ou inicializado corretamente
+    with open(ARQUIVO_DADOS, "r") as arquivo:
+        return json.load(arquivo)
+
+# Salvar dados no arquivo
+def salvar_dados():
+    with open(ARQUIVO_DADOS, "w") as arquivo:
+        json.dump(dados_usuarios, arquivo, indent=4)
+
+# Função para validar o CPF (somente números e até 11 dígitos)
+def validar_cpf(cpf):
+    return cpf.isdigit() and len(cpf) == 11
+
+# Função para validar o Contato (somente números e até 11 dígitos)
+def validar_contato(contato):
+    return contato.isdigit() and len(contato) == 11
+
+# Função para validar o login
+def validar_login():
+    usuario = campo_usuario.get()
+    senha = campo_senha.get()
+    if usuario in usuarios and usuarios[usuario] == senha:
+        abrir_tela_usuario(usuario)
+    else:
+        messagebox.showerror("Login", "Usuário ou senha inválidos!")
+
+# Função para abrir a tela do usuário
+def abrir_tela_usuario(usuario):
+    janela_usuario = ctk.CTkToplevel(app)
+    janela_usuario.title("Bem-vindo")
+    janela_usuario.geometry("400x400")
+
+    def cadastrar_dados():
+        def salvar():
+            cpf = campo_cpf.get()
+            contato = campo_contato.get()
+           
+            if not validar_cpf(cpf):
+                messagebox.showerror("Erro", "CPF inválido! O CPF deve ter 11 dígitos.")
+                return
+           
+            if not validar_contato(contato):
+                messagebox.showerror("Erro", "Contato inválido! O contato deve ter 11 dígitos.")
+                return
+
+            dados = {
+                "nome_completo": campo_nome.get(),
+                "cpf": cpf,
+                "contato": contato,
+                "email": campo_email.get(),
+                "experiencia": campo_experiencia.get(),
+                "cargo": campo_cargo.get(),
+                "idade": campo_idade.get()
+            }
+            if all(dados.values()):
+                dados_usuarios[usuario] = dados
+                salvar_dados()
+                messagebox.showinfo("Sucesso", "Dados cadastrados com sucesso!")
+                janela_dados.destroy()
+            else:
+                messagebox.showerror("Erro", "Preencha todos os campos!")
+
+        janela_dados = ctk.CTkToplevel(janela_usuario)
+        janela_dados.title("Cadastrar Dados")
+        janela_dados.geometry("400x400")
+
+        campos = {
+            "Nome Completo": ctk.CTkEntry(janela_dados),
+            "CPF (Apenas números)": ctk.CTkEntry(janela_dados),
+            "Contato (Apenas números)": ctk.CTkEntry(janela_dados),
+            "Email": ctk.CTkEntry(janela_dados),
+            "Experiência": ctk.CTkEntry(janela_dados),
+            "Cargo Almejado": ctk.CTkEntry(janela_dados),
+            "Idade": ctk.CTkEntry(janela_dados)
+        }
+
+        campo_nome, campo_cpf, campo_contato, campo_email, campo_experiencia, campo_cargo, campo_idade = campos.values()
+
+        for rotulo, campo in campos.items():
+            ctk.CTkLabel(janela_dados, text=rotulo).pack(pady=5)
+            campo.pack(pady=5)
+
+        botao_salvar = ctk.CTkButton(janela_dados, text="Salvar", command=salvar)
+        botao_salvar.pack(pady=20)
+
+    def atualizar_dados():
+        def salvar():
+            cpf = campo_cpf.get()
+            contato = campo_contato.get()
+
+            if not validar_cpf(cpf):
+                messagebox.showerror("Erro", "CPF inválido! O CPF deve ter 11 dígitos.")
+                return
+
+            if not validar_contato(contato):
+                messagebox.showerror("Erro", "Contato inválido! O contato deve ter 11 dígitos.")
+                return
+
+            dados = {
+                "nome_completo": campo_nome.get(),
+                "cpf": cpf,
+                "contato": contato,
+                "email": campo_email.get(),
+                "experiencia": campo_experiencia.get(),
+                "cargo": campo_cargo.get(),
+                "idade": campo_idade.get()
+            }
+            if all(dados.values()):
+                dados_usuarios[usuario] = dados
+                salvar_dados()
+                messagebox.showinfo("Sucesso", "Dados atualizados com sucesso!")
+                janela_atualizar_dados.destroy()
+            else:
+                messagebox.showerror("Erro", "Preencha todos os campos!")
+
+        janela_atualizar_dados = ctk.CTkToplevel(janela_usuario)
+        janela_atualizar_dados.title("Atualizar Dados")
+        janela_atualizar_dados.geometry("400x400")
+
+        dados = dados_usuarios.get(usuario, {})
+
+        campos = {
+            "Nome Completo": ctk.CTkEntry(janela_atualizar_dados),
+            "CPF (Apenas números)": ctk.CTkEntry(janela_atualizar_dados),
+            "Contato (Apenas números)": ctk.CTkEntry(janela_atualizar_dados),
+            "Email": ctk.CTkEntry(janela_atualizar_dados),
+            "Experiência": ctk.CTkEntry(janela_atualizar_dados),
+            "Cargo Almejado": ctk.CTkEntry(janela_atualizar_dados),
+            "Idade": ctk.CTkEntry(janela_atualizar_dados)
+        }
+
+        campo_nome, campo_cpf, campo_contato, campo_email, campo_experiencia, campo_cargo, campo_idade = campos.values()
+
+        for rotulo, campo in campos.items():
+            ctk.CTkLabel(janela_atualizar_dados, text=rotulo).pack(pady=5)
+            campo.pack(pady=5)
+
+        # Preenche os campos com os dados já cadastrados
+        campo_nome.insert(0, dados.get("nome_completo", ""))
+        campo_cpf.insert(0, dados.get("cpf", ""))
+        campo_contato.insert(0, dados.get("contato", ""))
+        campo_email.insert(0, dados.get("email", ""))
+        campo_experiencia.insert(0, dados.get("experiencia", ""))
+        campo_cargo.insert(0, dados.get("cargo", ""))
+        campo_idade.insert(0, dados.get("idade", ""))
+
+        botao_salvar = ctk.CTkButton(janela_atualizar_dados, text="Salvar", command=salvar)
+        botao_salvar.pack(pady=20)
+
+    def excluir_cadastro():
+        resposta = messagebox.askyesno("Excluir Cadastro", "Você tem certeza que deseja excluir seu cadastro? Isso não pode ser desfeito.")
+        if resposta:
+            del dados_usuarios[usuario]
+            salvar_dados()
+            messagebox.showinfo("Sucesso", "Cadastro excluído com sucesso!")
+            janela_usuario.quit()
+
+    # Botões de alteração, exclusão de dados
+    if usuario not in dados_usuarios:  # Se o usuário não cadastrou os dados ainda, mostra a opção de cadastrar
+        ctk.CTkButton(janela_usuario, text="Cadastrar Dados", command=cadastrar_dados).pack(pady=10)
+    else:
+        # Se já tiver dados cadastrados, exibe a opção de atualizar os dados
+        ctk.CTkButton(janela_usuario, text="Atualizar Cadastro", command=atualizar_dados).pack(pady=10)
+        # Adiciona a opção de excluir o cadastro
+        ctk.CTkButton(janela_usuario, text="Excluir Cadastro", command=excluir_cadastro).pack(pady=10)
+
+    # Botão Sair
+    ctk.CTkButton(janela_usuario, text="Sair", command=janela_usuario.quit).pack(pady=20)
+
+# Função para criar uma nova conta
+def criar_conta():
+    def cadastrar():
+        novo_usuario = campo_novo_usuario.get()
+        nova_senha = campo_nova_senha.get()
+        if novo_usuario and nova_senha:
+            if novo_usuario in usuarios:
+                messagebox.showerror("Erro", "Usuário já existe!")
+            else:
+                usuarios[novo_usuario] = nova_senha
+                messagebox.showinfo("Cadastro", "Conta criada com sucesso!")
+                salvar_dados()
+                janela_cadastro.destroy()
+        else:
+            messagebox.showerror("Erro", "Preencha todos os campos!")
+
+    janela_cadastro = ctk.CTkToplevel(app)
+    janela_cadastro.title("Criar Conta")
+    janela_cadastro.geometry("300x250")
+
+    ctk.CTkLabel(janela_cadastro, text="Usuário").pack(pady=10)
+    campo_novo_usuario = ctk.CTkEntry(janela_cadastro)
+    campo_novo_usuario.pack(pady=10)
+
+    ctk.CTkLabel(janela_cadastro, text="Senha").pack(pady=10)
+    campo_nova_senha = ctk.CTkEntry(janela_cadastro, show='*')
+    campo_nova_senha.pack(pady=10)
+
+    ctk.CTkButton(janela_cadastro, text="Cadastrar", command=cadastrar).pack(pady=20)
+
+    # Botão Sair
+    ctk.CTkButton(janela_cadastro, text="Sair", command=janela_cadastro.quit).pack(pady=20)
+
+# Interface principal
+app = ctk.CTk()
+app.title('Sistema de Login')
+app.geometry('300x350')
+
+ctk.CTkLabel(app, text='Usuário').pack(pady=10)
+campo_usuario = ctk.CTkEntry(app)
+campo_usuario.pack(pady=10)
+
+ctk.CTkLabel(app, text='Senha').pack(pady=10)
+campo_senha = ctk.CTkEntry(app, show='*')
+campo_senha.pack(pady=10)
+
+ctk.CTkButton(app, text='Login', command=validar_login).pack(pady=10)
+ctk.CTkButton(app, text='Criar Conta', command=criar_conta).pack(pady=10)
+
+# Botão Sair
+ctk.CTkButton(app, text="Sair", command=app.quit).pack(pady=20)
+
+# Carregar dados ao iniciar
+dados_usuarios = carregar_dados()
+
+app.mainloop()
